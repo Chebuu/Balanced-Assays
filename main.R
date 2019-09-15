@@ -7,11 +7,14 @@ LATEST_AID <- 1347131 # As of 10/14/2019
 AID_SEQ <- 1:LATEST_AID
 
 MIN_TOTAL <- 8000
-MIN_RATIO <- 0.05
+MIN_FRAC <- 0.05
+
 
 RESULTS_FILE <- 'results.csv'
 
 PUG_URL <- 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/%s/summary/XML'
+
+if(!file.exists(RESULTS_FILE)) write.table(c('AID','Total','Active','Inactive'), sep=',', row.names=FALSE, col.names=FALSE)
 
 for(aid in AID_SEQ){
   
@@ -21,33 +24,33 @@ for(aid in AID_SEQ){
   root <- xmlRoot(doc)
   
   SIDAll <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'SIDCountAll', recursive=T)))
+  SIDActive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'SIDCountActive', recursive=T)))
+  SIDInactive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'SIDCountInactive', recursive=T)))
+  SIDFracActive <- SIDActive / SIDAll
+  SIDFracInactive <- SIDInactive / SIDAll
+  
   CIDAll <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'CIDCountAll', recursive=T)))
+  CIDActive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'CIDCountActive', recursive=T)))
+  CIDInactive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'CIDCountInactive', recursive=T)))
+  CIDFracActive <- CIDActive / CIDAll
+  CIDFracInactive <- CIDInactive / CIDAll
   
   if(SIDAll >= MIN_TOTAL){
-    SIDActive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'SIDCountActive', recursive=T)))
-    SIDInactive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'SIDCountInactive', recursive=T)))
-    SIDRatioActive <- SIDActive / SIDAll
-    SIDRatioInactive <- SIDInactive / SIDAll
-    
-    if(SIDRatioActive >= MIN_RATIO && SIDInactive >= MIN_RATIO){
-      write.csv(data.frame(AID=aid,Total=CIDAll,Active=CIDActive,Inactive=CIDInactive), file=RESULTS_FILE, append=T)
-      print(sprintf('Added AID %s: SIDS: Total(%s) Active(%s) Inactive(%s)', aid, SIDAll, SIDActive, SIDInactive))
+    if(SIDFracActive >= MIN_FRAC && SIDInactive >= MIN_FRAC){
+      write.table(data.frame(AID=aid,Total=CIDAll,Active=CIDActive,Inactive=CIDInactive), file=RESULTS_FILE, append=T, sep=',', row.names=FALSE, col.names=FALSE)
+      print(sprintf('Added AID %s: SIDs: Total(%s) Active(%s) Inactive(%s)', aid, SIDAll, SIDActive, SIDInactive))
     }else{
-      print(sprintf('Skipping AID %s: SIDS: Total(%s) Active(%s) Inactive(%s)', aid, SIDAll, SIDActive, SIDInactive))
+      print(sprintf('Skipping AID %s: SIDs: Total(%s) Active(%s) Inactive(%s)', aid, SIDAll, SIDActive, SIDInactive))
     }
   }else if(CIDAll >= MIN_TOTAL){
-    CIDActive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'CIDCountActive', recursive=T)))
-    CIDInactive <- as.numeric(xmluValue.safe(xmlElementsByTagName(root, 'CIDCountInactive', recursive=T)))
-    CIDRatioActive <- CIDActive / CIDAll
-    CIDRatioInactive <- CIDInactive / CIDAll
-    if(CIDRatioActive >= MIN_RATIO && CIDRatioInactive >= MIN_RATIO){
-      write.csv(data.frame(AID=aid,Total=CIDAll,Active=CIDActive,Inactive=CIDInactive), file=RESULTS_FILE, append=T) 
-      print(sprintf('Added AID %s: CIDS: Total(%s) Active(%s) Inactive(%s)', aid, CIDAll, CIDActive, CIDInactive))
+    if(CIDFracActive >= MIN_FRAC && CIDFracInactive >= MIN_FRAC){
+      write.table(data.frame(AID=aid,Total=CIDAll,Active=CIDActive,Inactive=CIDInactive), file=RESULTS_FILE, append=T, sep=',', row.names=FALSE, col.names=FALSE)
+      print(sprintf('Added AID %s: CIDs: Total(%s) Active(%s) Inactive(%s)', aid, CIDAll, CIDActive, CIDInactive))
     }else{
-      print(sprintf('Skipping AID %s: CIDS: Total(%s) Active(%s) Inactive(%s)', aid, CIDAll, CIDActive, CIDInactive))
+      print(sprintf('Skipping AID %s: CIDs: Total(%s) Active(%s) Inactive(%s)', aid, CIDAll, CIDActive, CIDInactive))
     }
   }else{
-    print(sprintf('Skipping AID %s: SIDS(%s) CIDS(%s)', aid, SIDAll, CIDAll))  
+    print(sprintf('Skipping AID %s: SIDs(%s) CIDs(%s)', aid, SIDAll, CIDAll))  
   }
 }
 
