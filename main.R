@@ -9,7 +9,6 @@ AID_SEQ <- 1:LATEST_AID
 MIN_TOTAL <- 8000
 MIN_FRAC <- 0.05
 
-
 RESULTS_FILE <- 'results.csv'
 
 PUG_URL <- 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/%s/summary/XML'
@@ -17,7 +16,6 @@ PUG_URL <- 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/%s/summary/XML'
 if(!file.exists(RESULTS_FILE)) write.table(c('AID','Total','Active','Inactive'), sep=',', row.names=FALSE, col.names=FALSE)
 
 for(aid in AID_SEQ){
-  
   url <- sprintf(PUG_URL, aid)
   res <- getURL(url)
   doc <- xmlParse(res)
